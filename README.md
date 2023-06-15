@@ -9,6 +9,15 @@ This is an API for managing categories in an online store. It is built using Lar
 - MySQL
 - Laravel 8
 
+## Additional Liblaries
+  "require": {
+       
+        "bmatovu/laravel-xml": "^3.2",
+        "kalnoy/nestedset": "^6.0",
+        
+    },
+
+
  ## Configure the database connection:
 
 - Create a new MySQL database for the project

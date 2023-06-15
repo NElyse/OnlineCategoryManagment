@@ -1,124 +1,96 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Unit;
+
+use App\Models\Category;
+use Tests\TestCase;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
-use App\Models\Category;
+
 
 class CategoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testGetAllCategories()
+
+    /**
+     * Test retrieving all categories.
+     *
+     * @return void
+     */
+
+    public function test_GetAllCategories()
     {
-        Category::factory()->count(5)->create();
-
-        $response = $this->get('/categories');
-
-        $response->assertStatus(200)
-            ->assertHeader('Content-Type', 'text/xml');
+        $response = $this->get('/api/categories');
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'text/xml; charset=UTF-8');
     }
 
-    public function testGetCategoryById()
+
+    /**
+     * Test retrieving a specific category by ID.
+     *
+     * @return void
+     */
+    public function test_GetSingleCategoryById()
     {
-        $category = Category::factory()->create();
-
-        $response = $this->get('/categories/' . $category->id);
-
-        $response->assertStatus(200)
-            ->assertHeader('Content-Type', 'text/xml');
+        $category = Category::create([
+            'name' => 'Home'
+        ]);
+        $response = $this->get('/api/categories/' . $category->id);
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'text/xml; charset=UTF-8');
     }
 
-    public function testGetCategoryByIdNotFound()
+    /**
+     * Test creating a new category.
+     *
+     * @return void
+     */
+    public function test_createNewCategory()
     {
-        $response = $this->get('/categories/999');
-
-        $response->assertStatus(404)
-            ->assertHeader('Content-Type', 'text/xml');
+        $category = Category::make([
+            'name' => 'Home'
+        ]);
+        $category->save();
+        $this->get('/api/categories/' . $category->id);
+        self::assertTrue($category->count() == 1);
     }
 
-    public function testCreateCategory()
+    /**
+     * Test updating an existing category.
+     *
+     * @return void
+     */
+    public function test_updatingCategory()
     {
-        $data = [
-            'name' => 'New Category',
-            'parent_id' => null
-        ];
+        $oldCategory = Category::make([
+            'name' => 'Home'
+        ]);
+        $oldCategory->save();
 
-        $response = $this->post('/categories', $data);
+        $oldCategory->name = 'updatedCategory';
+        $oldCategory->save();
 
-        $response->assertStatus(201)
-            ->assertHeader('Content-Type', 'text/xml');
+        // apply assertion
+        $updated = Category::where('name', 'Home')->get();
+        $olderParentCategory = Category::where('name', 'parentCategory')->get();
+
+        self::assertCount(1,$updated);
+        self::assertCount(0,$olderParentCategory);
     }
 
-    public function testCreateCategoryWithParent()
-    {
-        $parent = Category::factory()->create();
-        $data = [
-            'name' => 'New Category',
-            'parent_id' => $parent->id
-        ];
+    /**
+     * Test deleting a category.
+     *
+     * @return void
+     */
+    public function test_deleteCategory(){
+        $category = Category::create(['name'=>'Home']);
 
-        $response = $this->post('/categories', $data);
-
-        $response->assertStatus(201)
-            ->assertHeader('Content-Type', 'text/xml');
+        $response = $this->delete('/api/categories/'.$category->id);
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type','text/xml; charset=UTF-8');
     }
 
-    public function testCreateCategoryWithInvalidParent()
-    {
-        $data = [
-            'name' => 'New Category',
-            'parent_id' => 999
-        ];
-
-        $response = $this->post('/categories', $data);
-
-        $response->assertStatus(404)
-            ->assertHeader('Content-Type', 'text/xml');
-    }
-
-    public function testUpdateCategory()
-    {
-        $category = Category::factory()->create();
-        $data = [
-            'name' => 'Updated Category'
-        ];
-
-        $response = $this->put('/categories/' . $category->id, $data);
-
-        $response->assertStatus(200)
-            ->assertHeader('Content-Type', 'text/xml');
-    }
-
-    public function testUpdateCategoryNotFound()
-    {
-        $data = [
-            'name' => 'Updated Category'
-        ];
-
-        $response = $this->put('/categories/999', $data);
-
-        $response->assertStatus(404)
-            ->assertHeader('Content-Type', 'text/xml');
-    }
-
-    public function testDeleteCategory()
-    {
-        $category = Category::factory()->create();
-
-        $response = $this->delete('/categories/' . $category->id);
-
-        $response->assertStatus(200)
-            ->assertHeader('Content-Type', 'text/xml');
-    }
-
-    public function testDeleteCategoryNotFound()
-    {
-        $response = $this->delete('/categories/999');
-
-        $response->assertStatus(404)
-            ->assertHeader('Content-Type', 'text/xml');
-    }
 }

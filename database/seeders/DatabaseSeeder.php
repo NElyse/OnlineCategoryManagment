@@ -22,9 +22,6 @@ class DatabaseSeeder extends Seeder
             'name' => 'Book'
         ]);
         Category::create([
-            'name' => 'Pome'
-        ]);
-        Category::create([
             'name' => 'Fruits'
         ]);
     }
